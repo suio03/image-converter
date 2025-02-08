@@ -1,4 +1,5 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from typing import Optional
+from fastapi import FastAPI, UploadFile, File, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from utils.converter import convert_jfif_to_jpg
@@ -9,11 +10,14 @@ app = FastAPI(title="JFIF to JPG Converter")
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Replace with your frontend URL in production
+    allow_origins=["https://jfif2jpg.net/"],  # Replace with your frontend URL in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+async def verify_api_key(x_api_key: Optional[str] = Header(None)):
+    if not x_api_key or x_api_key != os.getenv("API_KEY"):
+        raise HTTPException(status_code=403, detail="Invalid API key")
 
 @app.get("/")
 async def read_root():

@@ -4,8 +4,9 @@ services:
   api:
     build: .
     ports:
-      - "8000:8000"
+      - "8080:8080"
     volumes:
       - ./app:/app
     environment:
-      - MAX_FILE_SIZE=10485760  # 10MB in bytes
+      - MAX_FILE_SIZE=10485760  
+      - API_KEY=D4bc01c1uwEnLphpq2kzz5ZJZ3zn+7OXKE4ExlnOcnI=
