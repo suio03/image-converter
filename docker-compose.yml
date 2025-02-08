@@ -8,5 +8,6 @@ services:
     volumes:
       - ./app:/app
     environment:
-      - MAX_FILE_SIZE=10485760  
-      - API_KEY=D4bc01c1uwEnLphpq2kzz5ZJZ3zn+7OXKE4ExlnOcnI=
+      - MAX_FILE_SIZE=10485760
+    env_file:
+      - .env
