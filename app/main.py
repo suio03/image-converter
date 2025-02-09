@@ -5,7 +5,10 @@ from fastapi.responses import JSONResponse
 from utils.converter import convert_jfif_to_jpg
 import os
 from fastapi import Depends
-app = FastAPI(title="JFIF to JPG Converter")
+app = FastAPI(title="JFIF to JPG Converter", root_path="/api")
+
+
+
 
 # CORS configuration
 app.add_middleware(
