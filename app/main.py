@@ -4,41 +4,40 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from utils.converter import convert_jfif_to_jpg
 import os
-
+from fastapi import Depends
 app = FastAPI(title="JFIF to JPG Converter")
 
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://jfif2jpg.net/"],  # Replace with your frontend URL in production
+    # allow_origins=["https://jfif2jpg.net/", "http://localhost:3000"],  # Replace with your frontend URL in production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-async def verify_api_key(x_api_key: Optional[str] = Header(None)):
+async def verify_api_key(x_api_key: Optional[str] = Header(None, alias="X-API-Key")):
+    print("Received API Key:", x_api_key)  # Debug line
+    print("Expected API Key:", os.getenv("API_KEY"))  # Debug line
     if not x_api_key or x_api_key != os.getenv("API_KEY"):
         raise HTTPException(status_code=403, detail="Invalid API key")
+    return x_api_key
 
 @app.get("/")
 async def read_root():
     return {"message": "JFIF to JPG Converter API"}
 
 @app.post("/convert")
-async def convert_image(file: UploadFile = File(...)):
+async def convert_image(
+    file: UploadFile = File(...),
+    x_api_key: str = Depends(verify_api_key)
+):
+    print("API Key in convert endpoint:", x_api_key)  # Debug line
     try:
-        # Validate file size
-        MAX_FILE_SIZE = int(os.getenv("MAX_FILE_SIZE", 10 * 1024 * 1024))  # Default 10MB
-        file_size = 0
         contents = bytearray()
         
         # Read file in chunks to handle large files
         while chunk := await file.read(8192):
-            file_size += len(chunk)
-            if file_size > MAX_FILE_SIZE:
-                raise HTTPException(
-                    status_code=413,
-                    detail="File too large"
-                )
             contents.extend(chunk)
 
         # Validate file type
