@@ -13,8 +13,8 @@ app = FastAPI(title="JFIF to JPG Converter", root_path="/api")
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    # allow_origins=["https://jfif2jpg.net/", "http://localhost:3000"],  # Replace with your frontend URL in production
-    allow_origins=["*"],
+    allow_origins=["https://jfif2jpg.net/", "http://localhost:3000"],  # Replace with your frontend URL in production
+    # allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
