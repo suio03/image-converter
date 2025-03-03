@@ -6,13 +6,14 @@ from utils.converter import convert_jfif_to_jpg
 import os
 from fastapi import Depends
 from utils.pdf_converter import png_to_pdf
+from utils.heic_pdf import heic_to_pdf_binary
 app = FastAPI(title="JFIF to JPG Converter", root_path="/api")
 
 
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://png2pdf.net", "http://localhost:3000", "https://png2pdf.net"],  # Replace with your frontend URL in production
+    allow_origins=["https://png2pdf.net", "http://localhost:3000", "https://png2pdf.net", "https://heic2pdf.app"],  # Replace with your frontend URL in production
     # allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
@@ -38,13 +39,6 @@ async def convert_image(
         # Read file in chunks to handle large files
         while chunk := await file.read(8192):
             contents.extend(chunk)
-
-        # Validate file type
-        if not file.filename.lower().endswith(('.jfif', '.jpg', '.jpeg')):
-            raise HTTPException(
-                status_code=400,
-                detail="Unsupported file format. Only JFIF files are supported."
-            )
 
         # Convert the image
         result = await convert_jfif_to_jpg(contents, file.filename)
@@ -83,13 +77,6 @@ async def convert_png_to_pdf(
             raise HTTPException(400, "Empty file received")
             
         input_bytes = bytes(contents)
-
-        if not file.filename.lower().endswith('.png'):
-            raise HTTPException(
-                status_code=400,
-                detail="Unsupported file format. Only PNG files are supported."
-            )
-
         result = await png_to_pdf(input_bytes, file.filename)
         
         if not result.get('content'):
@@ -109,3 +96,33 @@ async def convert_png_to_pdf(
         raise e
     except Exception as e:
         raise HTTPException(500, detail=f"Internal error: {str(e)}")
+    
+@app.post("/convert-heic-to-pdf")
+async def convert_heic_to_pdf(
+    file: UploadFile = File(...),
+    x_api_key: str = Depends(verify_api_key)
+):
+    try:
+        contents = bytearray()
+        
+        # Read file in chunks to handle large files
+        while chunk := await file.read(8192):
+            contents.extend(chunk)
+        
+        # Convert the image
+        pdf_bytes, filename = await heic_to_pdf_binary(bytes(contents), file.filename)
+        
+        # Return the PDF directly as binary data
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"'
+            }
+        )
+    
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"An error occurred: {str(e)}"
+        )
